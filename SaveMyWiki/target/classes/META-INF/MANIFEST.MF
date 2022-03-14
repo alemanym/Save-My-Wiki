@@ -1,6 +1,0 @@
-Manifest-Version: 1.0
-Built-By: alema
-Build-Jdk: 17.0.2
-Main-Class: com.mediawiki.tools.export.app.ApplicationLauncher
-Created-By: Maven Integration for Eclipse
-
