@@ -1,0 +1,14 @@
+package com.savemywiki.tools.export.model;
+
+public enum AppState {
+
+	INIT,
+	GET_NAMES_PROCESSING,
+	GET_NAMES_DONE,
+	EXPORT_PAGES_PROCESSING,
+	EXPORT_PAGES_DONE,
+	SAVE_XML_FILES_PROCESSING,
+	SAVE_XML_FILES_DONE,
+	;
+	
+}
