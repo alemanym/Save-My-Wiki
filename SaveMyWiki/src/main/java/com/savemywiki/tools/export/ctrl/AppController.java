@@ -69,7 +69,7 @@ public class AppController implements IActionListener {
 				// for each wiki namespace
 
 				logger.appendProgress("\r\n[" + model.fromStartDate() + "] Type de page : <b style=\"color: white;\">"
-						+ namespace.format() + "</b>");
+						+ namespace.desc() + "</b>");
 				logger.appendLog("Espace de nom : " + namespace.name() + " (id : " + namespace.getId() + ")");
 
 				// first call wiki web service

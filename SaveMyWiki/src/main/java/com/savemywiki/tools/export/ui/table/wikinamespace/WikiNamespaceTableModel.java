@@ -64,7 +64,7 @@ public class WikiNamespaceTableModel extends ObjectTableModel<WikiNamespaceData>
 		case 0:
 			return rowData.getNamespace().getId();
 		case 1:
-			return rowData.getNamespace().format();
+			return rowData.getNamespace().desc();
 		case 2:
 			return rowData;
 		case 3:

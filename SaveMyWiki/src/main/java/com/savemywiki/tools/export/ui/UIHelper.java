@@ -15,6 +15,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -47,9 +48,13 @@ public class UIHelper {
 		UIManager.put("ProgressBar.foreground", new Color(93, 121, 181));
 		UIManager.put("ProgressBar.selectionBackground", Color.WHITE);
 		UIManager.put("ProgressBar.selectionForeground", Color.WHITE);
-		
+
 		// custom tables
 		UIManager.put("Table.alternateRowColor", ((Color) UIManager.get("Table.background")).darker());
+
+		// tooltips
+		UIManager.put("ToolTip.background", new Color(93, 121, 181));
+		UIManager.put("ToolTip.foreground", new Color(33, 35, 53));
 
 		loadingIcon = new ImageIcon(AppView.class.getResource("/assets/loading-spinner.gif"));
 		launchIcon = new ImageIcon(AppView.class.getResource("/assets/launch-icon.png"));
@@ -107,32 +112,32 @@ public class UIHelper {
 	public JButton createButton(String title) {
 		return createButton(title, null);
 	}
-	
+
 	public void setColumnPreferredWidths(JTable table, Integer... widths) {
-	    TableColumnModel columnModel = table.getColumnModel();
-	    for (int i = 0; i < widths.length; i++) {
-	        if (i < columnModel.getColumnCount() && widths[i] != null) {
-	            columnModel.getColumn(i).setPreferredWidth(widths[i]);
-	        }
-	    }
+		TableColumnModel columnModel = table.getColumnModel();
+		for (int i = 0; i < widths.length; i++) {
+			if (i < columnModel.getColumnCount() && widths[i] != null) {
+				columnModel.getColumn(i).setPreferredWidth(widths[i]);
+			}
+		}
 	}
-	
+
 	public void setColumnMinWidths(JTable table, Integer... widths) {
-	    TableColumnModel columnModel = table.getColumnModel();
-	    for (int i = 0; i < widths.length; i++) {
-	        if (i < columnModel.getColumnCount() && widths[i] != null) {
-	            columnModel.getColumn(i).setMinWidth(widths[i]);
-	        }
-	    }
+		TableColumnModel columnModel = table.getColumnModel();
+		for (int i = 0; i < widths.length; i++) {
+			if (i < columnModel.getColumnCount() && widths[i] != null) {
+				columnModel.getColumn(i).setMinWidth(widths[i]);
+			}
+		}
 	}
-	
+
 	public void setColumnMaxWidths(JTable table, Integer... widths) {
-	    TableColumnModel columnModel = table.getColumnModel();
-	    for (int i = 0; i < widths.length; i++) {
-	        if (i < columnModel.getColumnCount() && widths[i] != null) {
-	            columnModel.getColumn(i).setMaxWidth(widths[i]);
-	        }
-	    }
+		TableColumnModel columnModel = table.getColumnModel();
+		for (int i = 0; i < widths.length; i++) {
+			if (i < columnModel.getColumnCount() && widths[i] != null) {
+				columnModel.getColumn(i).setMaxWidth(widths[i]);
+			}
+		}
 	}
 
 }

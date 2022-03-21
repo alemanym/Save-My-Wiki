@@ -38,6 +38,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
+import javax.swing.table.TableColumn;
 
 import com.savemywiki.tools.export.model.AppModel;
 import com.savemywiki.tools.export.model.AppState;
@@ -45,6 +46,7 @@ import com.savemywiki.tools.export.model.ExportData;
 import com.savemywiki.tools.export.model.IModelListener;
 import com.savemywiki.tools.export.model.TaskStatus;
 import com.savemywiki.tools.export.model.WikiNamespaceData;
+import com.savemywiki.tools.export.ui.table.ColumnHeaderToolTips;
 import com.savemywiki.tools.export.ui.table.PaginatedTableDecorator;
 import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTable;
 import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTableCellRenderer;
@@ -254,12 +256,30 @@ public class AppView extends JFrame implements IModelListener {
 		wikiTable.getTableHeader().setDefaultRenderer(new WikiNamespaceTableHeaderRenderer());
 		wikiTable.setDefaultRenderer(Object.class, new WikiNamespaceTableCellRenderer(model));
 
+		// pagination
 		WikiNamespaceTablePaginationProvider dataProvider = new WikiNamespaceTablePaginationProvider(model);
-		PaginatedTableDecorator.decorate(wikiTable,
-				dataProvider, null, 100);
+		PaginatedTableDecorator.decorate(wikiTable, dataProvider, null, 100);
+		
+		// column size
 		ui.setColumnPreferredWidths(wikiTable, 40, 200, 90, 120);
 		ui.setColumnMinWidths(wikiTable, 40, 200, 120, 120);
 		ui.setColumnMaxWidths(wikiTable, 40, 200, 120, 120);
+
+		// header tooltips
+	    ColumnHeaderToolTips tips = new ColumnHeaderToolTips();
+	    for (int coldIdx = 0; coldIdx < wikiTable.getColumnCount(); coldIdx++) {
+	      switch (coldIdx) {
+			case 0:
+			      tips.setToolTip(wikiTable.getColumnModel().getColumn(coldIdx), "ID Wiki du Type de Page (namespace)");
+				break;
+			case 1:
+			    tips.setToolTip(wikiTable.getColumnModel().getColumn(coldIdx), "Type de Page Wiki (namespace)");
+				break;
+			default:
+				break;
+			}
+	    }
+	    wikiTable.getTableHeader().addMouseMotionListener(tips);
 
 		JScrollPane wikiScroll = new JScrollPane(wikiTable);
 		wikiScroll.setBorder(ui.createTitleBorder("Données du Wiki"));

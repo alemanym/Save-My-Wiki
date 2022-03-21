@@ -148,11 +148,11 @@ public class MediawikiService {
 		if (!exportData.isRetry()) {
 			logger.appendProgress("\r\n[" + model.fromStartDate() + "] #" + exportData.getId()
 					+ " - <b style=\"color: white;\">" + exportData.getPageNames().size()
-					+ "</b> pages de type <b style=\"color: white;\">" + exportData.getNamespace().format() + "</b>");
+					+ "</b> pages de type <b style=\"color: white;\">" + exportData.getNamespace().desc() + "</b>");
 		} else {
 			logger.appendProgress("\r\n[" + model.fromStartDate() + "] #" + exportData.getRetrySource().getId()
 					+ " - <b style=\"color: white;\">" + exportData.getPageNames().size()
-					+ "</b> pages de type <b style=\"color: white;\">" + exportData.getNamespace().format()
+					+ "</b> pages de type <b style=\"color: white;\">" + exportData.getNamespace().desc()
 					+ "</b> (2e essai)");
 		}
 		logger.appendLog("[" + model.fromStartDate() + "] Requête - " + exportData.getId());

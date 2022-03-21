@@ -40,7 +40,7 @@ public class FileHelper {
 				String fileName = "[Noms] "
 						+ (data.getRetrySource() == null ? data.getId()
 								: (data.getRetrySource().getId() + "-" + data.getId()))
-						+ " - " + data.getNamespace().format() + ".txt";
+						+ " - " + data.getNamespace().desc() + ".txt";
 
 				// file content
 				StringBuffer sb = new StringBuffer();
@@ -191,7 +191,7 @@ public class FileHelper {
 		sbName.append(
 				data.getRetrySource() == null ? data.getId() : (data.getRetrySource().getId() + "-" + data.getId()));
 		sbName.append(" - ");
-		sbName.append(data.getNamespace().format());
+		sbName.append(data.getNamespace().desc());
 		sbName.append(".txt");
 
 		// file content
@@ -216,7 +216,7 @@ public class FileHelper {
 		sbName.append(
 				data.getRetrySource() == null ? data.getId() : (data.getRetrySource().getId() + "-" + data.getId()));
 		sbName.append(" - ");
-		sbName.append(data.getNamespace().format());
+		sbName.append(data.getNamespace().desc());
 		sbName.append(".txt");
 
 		// file content
@@ -241,7 +241,7 @@ public class FileHelper {
 		sbName.append(
 				data.getRetrySource() == null ? data.getId() : (data.getRetrySource().getId() + "-" + data.getId()));
 		sbName.append(" - ");
-		sbName.append(data.getNamespace().format());
+		sbName.append(data.getNamespace().desc());
 		sbName.append(".txt");
 
 		// file content
@@ -266,7 +266,7 @@ public class FileHelper {
 		sbName.append(
 				data.getRetrySource() == null ? data.getId() : (data.getRetrySource().getId() + "-" + data.getId()));
 		sbName.append(" - ");
-		sbName.append(data.getNamespace().format());
+		sbName.append(data.getNamespace().desc());
 		sbName.append(".xml");
 
 		// file content
