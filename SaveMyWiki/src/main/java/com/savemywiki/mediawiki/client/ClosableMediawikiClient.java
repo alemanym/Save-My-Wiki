@@ -24,6 +24,7 @@ public class ClosableMediawikiClient implements IMediawikiClient {
 	private static final String RELATIVE_URL_EXPORT = "/index.php/Sp%C3%A9cial:Exporter";
 	private static final String RELATIVE_URL_API = "/api.php";
 	private static final String SKIP_LINE = "\r\n";
+	private static final int TIME_OUT_SEC = 30;
 	private CloseableHttpClient httpClient;
 	private AppModel model;
 	private Logger logger;
@@ -49,9 +50,10 @@ public class ClosableMediawikiClient implements IMediawikiClient {
 //				.setSocketTimeout(60 * 1000)
 //				.setConnectionRequestTimeout(60 * 1000).build();
 
-		int timeout = 60;
-		RequestConfig config = RequestConfig.custom().setConnectTimeout(timeout * 1000)
-				.setConnectionRequestTimeout(timeout * 1000).setSocketTimeout(timeout * 1000).build();
+		RequestConfig config = RequestConfig.custom()
+				.setConnectTimeout(TIME_OUT_SEC * 1000)
+				.setConnectionRequestTimeout(TIME_OUT_SEC * 1000)
+				.setSocketTimeout(TIME_OUT_SEC * 1000).build();
 		return HttpClientBuilder.create().setDefaultRequestConfig(config).build();
 
 //		return HttpClients.custom()

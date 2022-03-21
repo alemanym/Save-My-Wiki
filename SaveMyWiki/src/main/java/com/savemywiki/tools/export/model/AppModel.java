@@ -15,6 +15,7 @@ public class AppModel {
 	private String appIconURL;
 
 	// Export data
+	private List<WikiNamespaceData> wikiNamespaceDataList;
 	private List<ExportData> exportDataList;
 	private List<ExportData> retryList;
 	private File exportsDataFile;
@@ -34,6 +35,17 @@ public class AppModel {
 		this.exportDataList = new ArrayList<>();
 		this.retryList = new ArrayList<>();
 		this.listeners = new ArrayList<>();
+		this.wikiNamespaceDataList = new ArrayList<>();
+		for (WikiNamespace namespace : WikiNamespace.values()) {
+			wikiNamespaceDataList.add(new WikiNamespaceData(namespace));
+		}
+	}
+
+	public void clearData() {
+		exportDataList.clear();
+		for (WikiNamespaceData data : wikiNamespaceDataList) {
+			data.clear();
+		}
 	}
 
 	// Getters & Setters
@@ -76,6 +88,14 @@ public class AppModel {
 
 	public void setAppIconURL(String appIconURL) {
 		this.appIconURL = appIconURL;
+	}
+
+	public List<WikiNamespaceData> getWikiNamespaceDataList() {
+		return wikiNamespaceDataList;
+	}
+
+	public void setWikiNamespaceDataList(List<WikiNamespaceData> wikiNamespaceDataList) {
+		this.wikiNamespaceDataList = wikiNamespaceDataList;
 	}
 
 	public List<ExportData> getExportDataList() {
@@ -221,9 +241,6 @@ public class AppModel {
 			if (exportData.getNamespace() == namespace) {
 				res = exportData;
 			}
-			if (exportData.getNamespace() != namespace && res != null) {
-				break;
-			}
 		}
 		return res;
 	}
@@ -237,6 +254,43 @@ public class AppModel {
 			}
 		}
 		return res;
+	}
+
+	public void add(ExportData exportData) {
+		getExportDataList().add(exportData);
+		WikiNamespaceData wikiData = getWikiNamespaceData(exportData.getNamespace());
+		wikiData.add(exportData);
+		for (IModelListener listener : listeners) {
+			listener.onExportInitDone(exportData);
+			listener.onNamespaceDataUpdate(wikiData, wikiData.getReadStatus(), wikiData.getReadStatus());
+		}
+	}
+
+	public void setWikiNamespaceReadStatus(WikiNamespace namespace, TaskStatus status) {
+		WikiNamespaceData wikiData = getWikiNamespaceData(namespace);
+		TaskStatus oldStatus = wikiData.getReadStatus();
+		wikiData.setReadStatus(status);
+		for (IModelListener listener : listeners) {
+			listener.onNamespaceDataUpdate(wikiData, oldStatus, status);
+		}
+	}
+
+	public void setWikiNamespaceExportStatus(WikiNamespace namespace, TaskStatus status) {
+		WikiNamespaceData wikiData = getWikiNamespaceData(namespace);
+		TaskStatus oldStatus = wikiData.getExportStatus();
+		wikiData.setExportStatus(status);
+		for (IModelListener listener : listeners) {
+			listener.onNamespaceDataUpdate(wikiData, oldStatus, status);
+		}
+	}
+
+	public WikiNamespaceData getWikiNamespaceData(WikiNamespace namespace) {
+		for (WikiNamespaceData data : wikiNamespaceDataList) {
+			if (data.getNamespace() == namespace) {
+				return data;
+			}
+		}
+		return null;
 	}
 
 }

@@ -59,11 +59,12 @@ public class AppController implements IActionListener {
 		model.setStartDate(new Date());
 		model.setCurrenProcessState(TaskStatus.PROCESSING);
 		model.setApplicationState(AppState.GET_NAMES_PROCESSING);
-		model.getExportDataList().clear();
+		model.clearData();
 		logger.appendProgress(
 				"<span style=\"color: orange;\">-----------------------------------<br>Récupération des noms de page<br>-----------------------------------</span>");
 		try {
 			for (WikiNamespace namespace : WikiNamespace.values()) {
+				model.setWikiNamespaceReadStatus(namespace, TaskStatus.PROCESSING);
 
 				// for each wiki namespace
 
@@ -118,6 +119,7 @@ public class AppController implements IActionListener {
 					logger.appendProgress(
 							"&nbsp;&nbsp;&nbsp;&nbsp;Noms de page récupérés</i> : <b style=\"color: #00ff00;\">0</b><br>");
 				}
+				model.setWikiNamespaceReadStatus(namespace, TaskStatus.DONE_SUCCESS);
 			}
 		} catch (InterruptedException | AbortProcessException e) {
 			logger.appendProgress(
@@ -170,7 +172,18 @@ public class AppController implements IActionListener {
 
 		try {
 			// first export attempts
+			WikiNamespace currentNamespace = null;
 			for (ExportData exportData : model.getExportDataList()) {
+				// select current Namespace Data
+				if (currentNamespace == null) {
+					currentNamespace = exportData.getNamespace();
+					model.setWikiNamespaceExportStatus(currentNamespace, TaskStatus.PROCESSING);
+				} else if (exportData.getNamespace() != currentNamespace) {
+					finalizeNamespaceExportStatus(currentNamespace, model.getWikiNamespaceData(currentNamespace).getExportDataList(), TaskStatus.WARNING);
+					currentNamespace = exportData.getNamespace();
+					model.setWikiNamespaceExportStatus(currentNamespace, TaskStatus.PROCESSING);
+				}
+				
 				// check interruption
 				this.processRunManager.checkInterruption();
 
@@ -180,13 +193,25 @@ public class AppController implements IActionListener {
 					model.addRetry(exportData);
 				}
 			}
+			finalizeNamespaceExportStatus(currentNamespace, model.getWikiNamespaceData(currentNamespace).getExportDataList(), TaskStatus.WARNING);
 
 			// retrying failed attempts => resizing request
 			if (model.getRetryList().size() > 0) {
 				logger.appendProgress(
 						"<span style=\"color: orange; font-weight: bold;\">-----------------------------------<br>Seconde tentatives<br>-----------------------------------</span>");
-
+				
+				currentNamespace = null;
 				for (ExportData exportData : model.getRetryList()) {
+					// select current Namespace Data
+					if (currentNamespace == null) {
+						currentNamespace = exportData.getNamespace();
+						model.setWikiNamespaceExportStatus(currentNamespace, TaskStatus.PROCESSING);
+					} else if (exportData.getNamespace() != currentNamespace) {
+						finalizeNamespaceExportStatus(currentNamespace, model.getRetryList(), TaskStatus.DONE_FAILED);
+						currentNamespace = exportData.getNamespace();
+						model.setWikiNamespaceExportStatus(currentNamespace, TaskStatus.PROCESSING);
+					}
+					
 					// check interruption
 					this.processRunManager.checkInterruption();
 
@@ -196,6 +221,7 @@ public class AppController implements IActionListener {
 						model.setCurrenProcessState(TaskStatus.DONE_FAILED);
 					}
 				}
+				finalizeNamespaceExportStatus(currentNamespace, model.getRetryList(), TaskStatus.DONE_FAILED);
 			}
 		} catch (InterruptedException | AbortProcessException e) {
 			logger.appendProgress(
@@ -208,6 +234,19 @@ public class AppController implements IActionListener {
 			model.setCurrenProcessState(TaskStatus.DONE_SUCCESS);
 		}
 		model.setApplicationState(AppState.EXPORT_PAGES_DONE);
+	}
+
+	private void finalizeNamespaceExportStatus(WikiNamespace namespace, List<ExportData> dataList, TaskStatus failStatus) {
+		if (dataList != null && dataList.size() > 0) {
+			TaskStatus status = TaskStatus.DONE_SUCCESS;
+			for (ExportData subData : dataList) {
+				if (subData.getNamespace() == namespace && subData.getStatus() != TaskStatus.DONE_SUCCESS) {
+					status = failStatus;
+					break;
+				}
+			}
+			model.setWikiNamespaceExportStatus(namespace, status);
+		}
 	}
 
 	/**
@@ -245,6 +284,33 @@ public class AppController implements IActionListener {
 		} else {
 			model.setCurrenProcessState(TaskStatus.DONE_FAILED);
 			model.setApplicationState(AppState.SAVE_XML_FILES_DONE);
+		}
+
+	}
+
+	@Override
+	public void performSaveNamesOnlyFiles() {
+
+		model.setCurrenProcessState(TaskStatus.PROCESSING);
+		model.setApplicationState(AppState.SAVE_NAMES_FILES_PROCESSING);
+
+		// choose target ZIP file
+		File zipFile = fileHelper.openSaveFileWindow(view, new ZipFileFilter());
+		if (zipFile == null) {
+			// no target file
+			model.setCurrenProcessState(TaskStatus.UNDEFINED);
+			model.setApplicationState(AppState.SAVE_NAMES_FILES_DONE);
+			return;
+		}
+
+		// build and store data into the ZIP archive
+		if (fileHelper.storeNamesAsZipArchive(model.getExportDataList(), zipFile)) {
+			model.setExportsDataFile(zipFile);
+			model.setCurrenProcessState(TaskStatus.DONE_SUCCESS);
+			model.setApplicationState(AppState.SAVE_NAMES_FILES_DONE);
+		} else {
+			model.setCurrenProcessState(TaskStatus.DONE_FAILED);
+			model.setApplicationState(AppState.SAVE_NAMES_FILES_DONE);
 		}
 
 	}

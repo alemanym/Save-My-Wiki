@@ -9,6 +9,7 @@ import java.awt.event.FocusListener;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -17,21 +18,22 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.TableColumnModel;
 
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMoonlightContrastIJTheme;
 import com.formdev.flatlaf.ui.FlatButtonBorder;
 import com.formdev.flatlaf.ui.FlatDropShadowBorder;
 
 public class UIHelper {
-	
-	protected ImageIcon loadingIcon;
-	protected ImageIcon launchIcon;
-	protected ImageIcon failIcon;
-	protected ImageIcon successIcon;
-	protected ImageIcon downloadIcon;
-	protected ImageIcon nextArrowIcon;
-	protected ImageIcon cancelIcon;
-	
+
+	public ImageIcon loadingIcon;
+	public ImageIcon launchIcon;
+	public ImageIcon failIcon;
+	public ImageIcon successIcon;
+	public ImageIcon downloadIcon;
+	public ImageIcon nextArrowIcon;
+	public ImageIcon cancelIcon;
+
 	public UIHelper() {
 		// -- Look & feel
 		try {
@@ -39,13 +41,16 @@ public class UIHelper {
 		} catch (UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
 		}
-		
+
 		// custom Progress Bar colors
 		UIManager.put("ProgressBar.background", new Color(25, 26, 42));
 		UIManager.put("ProgressBar.foreground", new Color(93, 121, 181));
 		UIManager.put("ProgressBar.selectionBackground", Color.WHITE);
 		UIManager.put("ProgressBar.selectionForeground", Color.WHITE);
 		
+		// custom tables
+		UIManager.put("Table.alternateRowColor", ((Color) UIManager.get("Table.background")).darker());
+
 		loadingIcon = new ImageIcon(AppView.class.getResource("/assets/loading-spinner.gif"));
 		launchIcon = new ImageIcon(AppView.class.getResource("/assets/launch-icon.png"));
 		successIcon = new ImageIcon(AppView.class.getResource("/assets/ok.png"));
@@ -62,6 +67,10 @@ public class UIHelper {
 		paneTitle.setTitleFont(paneTitle.getTitleFont().deriveFont(14.f));
 		paneTitle.setTitleColor(Color.WHITE);
 		return paneTitle;
+	}
+
+	public JButton createButton(ImageIcon icon) {
+		return createButton(null, icon);
 	}
 
 	public JButton createButton(String title, Icon ico) {
@@ -97,6 +106,33 @@ public class UIHelper {
 
 	public JButton createButton(String title) {
 		return createButton(title, null);
+	}
+	
+	public void setColumnPreferredWidths(JTable table, Integer... widths) {
+	    TableColumnModel columnModel = table.getColumnModel();
+	    for (int i = 0; i < widths.length; i++) {
+	        if (i < columnModel.getColumnCount() && widths[i] != null) {
+	            columnModel.getColumn(i).setPreferredWidth(widths[i]);
+	        }
+	    }
+	}
+	
+	public void setColumnMinWidths(JTable table, Integer... widths) {
+	    TableColumnModel columnModel = table.getColumnModel();
+	    for (int i = 0; i < widths.length; i++) {
+	        if (i < columnModel.getColumnCount() && widths[i] != null) {
+	            columnModel.getColumn(i).setMinWidth(widths[i]);
+	        }
+	    }
+	}
+	
+	public void setColumnMaxWidths(JTable table, Integer... widths) {
+	    TableColumnModel columnModel = table.getColumnModel();
+	    for (int i = 0; i < widths.length; i++) {
+	        if (i < columnModel.getColumnCount() && widths[i] != null) {
+	            columnModel.getColumn(i).setMaxWidth(widths[i]);
+	        }
+	    }
 	}
 
 }

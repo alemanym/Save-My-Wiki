@@ -123,7 +123,7 @@ public class MediawikiService {
 			JSONObject pageJson = (JSONObject) pageObj;
 			dataModel.getPageNames().add((String) pageJson.get("title"));
 		}
-		model.getExportDataList().add(dataModel);
+		model.add(dataModel);
 		logger.appendLog("Nombre de noms récupérés : " + pagesData.length());
 
 		// next page

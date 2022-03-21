@@ -10,6 +10,9 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.savemywiki.tools.export.model.AppModel;
 import com.savemywiki.tools.export.model.ExportData;
@@ -23,7 +26,7 @@ public class SimpleMediawikiClient implements IMediawikiClient {
 
 	private static final String RELATIVE_URL_EXPORT = "/index.php/Sp%C3%A9cial:Exporter";
 	private static final String RELATIVE_URL_API = "/api.php";
-	private static final String SKIP_LINE = "\r\n";
+	private static final String PAGE_SEPARATOR = "|";
 
 	private HttpClient httpClient;
 	private AppModel model;
@@ -42,6 +45,7 @@ public class SimpleMediawikiClient implements IMediawikiClient {
 	@Override
 	public HTTPWikiResponse listPageNamesRequest(WikiNamespace namespace, String fromPageName)
 			throws URISyntaxException, IOException, InterruptedException {
+
 		URI uri = buildListPageURI(model, namespace, fromPageName);
 		logger.appendLog(uri.toString());
 
@@ -99,14 +103,46 @@ public class SimpleMediawikiClient implements IMediawikiClient {
 
 		for (String pageName : exportData.getPageNames()) {
 			pagesParam.append(pageName);
-			pagesParam.append(SKIP_LINE);
+			pagesParam.append(PAGE_SEPARATOR);
 		}
 
-		URIBuilder b = new URIBuilder(model.getWebsiteURL() + RELATIVE_URL_EXPORT);
-		b.addParameter("pages", pagesParam.toString()); // liste des noms de pages
-		b.addParameter("curonly", "1"); // dernière version de chaque page seulement
-		b.addParameter("wpDownload", "1"); // download data
+		URIBuilder b = new URIBuilder(model.getWebsiteURL() + RELATIVE_URL_API);
+		b.addParameter("action", "query");
+		b.addParameter("format", "json");
+		b.addParameter("prop", "revisions");
+		b.addParameter("export", "1");
+		b.addParameter("exportnowrap", "1");
+		b.addParameter("titles", pagesParam.toString()); // liste des noms de pages
+
 		URI uri = b.build();
 		return uri;
+	}
+
+	private String authToken;
+	private void authenticate() throws IOException, InterruptedException, URISyntaxException {
+
+		// request params
+		URIBuilder b = new URIBuilder(model.getWebsiteURL() + RELATIVE_URL_API);
+		b.addParameter("action", "query");
+		b.addParameter("format", "json");
+		b.addParameter("meta", "tokens");
+		b.addParameter("type", "login");
+		URI uri = b.build();
+
+		logger.appendLog(uri.toString());
+
+		// call web service
+		HttpRequest request = HttpRequest.newBuilder().uri(uri).headers("Content-Type", "text/plain;charset=UTF-8")
+				.POST(HttpRequest.BodyPublishers.noBody()).build();
+		HttpResponse<String> response = httpClient.send(request, BodyHandlers.ofString());
+
+		// pages response
+		JSONObject data = new JSONObject(response.body());
+		JSONArray pagesData = null;
+		try {
+			this.authToken = (String) data.getJSONObject("query").getJSONObject("tokens").get("logintoken");
+		} catch (JSONException e) {
+			throw e;
+		}
 	}
 }

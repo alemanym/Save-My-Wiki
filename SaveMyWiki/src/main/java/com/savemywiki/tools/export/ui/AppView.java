@@ -1,5 +1,6 @@
 package com.savemywiki.tools.export.ui;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -28,11 +29,11 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
@@ -43,6 +44,13 @@ import com.savemywiki.tools.export.model.AppState;
 import com.savemywiki.tools.export.model.ExportData;
 import com.savemywiki.tools.export.model.IModelListener;
 import com.savemywiki.tools.export.model.TaskStatus;
+import com.savemywiki.tools.export.model.WikiNamespaceData;
+import com.savemywiki.tools.export.ui.table.PaginatedTableDecorator;
+import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTable;
+import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTableCellRenderer;
+import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTableHeaderRenderer;
+import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTableModel;
+import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTablePaginationProvider;
 
 public class AppView extends JFrame implements IModelListener {
 
@@ -70,6 +78,10 @@ public class AppView extends JFrame implements IModelListener {
 	private JProgressBar progressBar;
 	private JButton cancelButton;
 
+	private JButton saveNamesBtn;
+
+	private WikiNamespaceTable wikiTable;
+
 	public AppView(UIHelper uiHelper, AppModel model) {
 		super(model.getFrameTitle());
 		this.ui = uiHelper;
@@ -95,7 +107,7 @@ public class AppView extends JFrame implements IModelListener {
 		// Set the window to be visible as the default to be false
 		this.add(contentPane);
 		this.pack();
-		this.setResizable(false);
+		this.setResizable(true);
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 
@@ -108,10 +120,26 @@ public class AppView extends JFrame implements IModelListener {
 		GridBagLayout layout = new GridBagLayout();
 		panel.setLayout(layout);
 
+		// top
 		addConfigPanelUI(panel);
-		addLogUI(panel);
-		addProgressionPane(panel);
 		addActionBar(panel);
+
+		// middle
+		JPanel middle = createMiddlePane(panel);
+		JComponent progression = buildProgressionPane();
+		JComponent logs = buildLogsPane();
+		JComponent data = buildDataPane();
+
+		JSplitPane splitterH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, data, progression);
+		splitterH.setDividerLocation(600);
+
+		JSplitPane splitterV = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitterH, logs);
+		splitterV.setPreferredSize(new Dimension(500, 500));
+		splitterV.setDividerLocation(400);
+
+		middle.add(splitterV);
+
+		// bottom
 		addFooter(panel);
 
 		return panel;
@@ -202,12 +230,9 @@ public class AppView extends JFrame implements IModelListener {
 		parent.add(component, cst);
 	}
 
-	private void addLogUI(JComponent parent) {
-		logsUI = new JTextArea(15, 10);
-		logsUI.setEditable(false);
-
-		JScrollPane component = new JScrollPane(logsUI);
-
+	private JPanel createMiddlePane(JComponent parent) {
+		JPanel middle = new JPanel(new BorderLayout());
+		middle.setPreferredSize(new Dimension(500, 500));
 		GridBagConstraints cst = new GridBagConstraints();
 		cst.gridx = 0;
 		cst.gridy = 2;
@@ -218,15 +243,31 @@ public class AppView extends JFrame implements IModelListener {
 		cst.weighty = 1;
 		cst.fill = GridBagConstraints.BOTH;
 		cst.anchor = GridBagConstraints.NORTHWEST;
-
-		TitledBorder buildTitleBorder = ui.createTitleBorder("Logs");
-		component.setBorder(buildTitleBorder);
-		component.setPreferredSize(new Dimension(500, 500));
-
-		parent.add(component, cst);
+		parent.add(middle, cst);
+		return middle;
 	}
 
-	private void addProgressionPane(JPanel parent) {
+	private JComponent buildDataPane() {
+
+		wikiTable = new WikiNamespaceTable(new WikiNamespaceTableModel(model));
+		// Cells renderers
+		wikiTable.getTableHeader().setDefaultRenderer(new WikiNamespaceTableHeaderRenderer());
+		wikiTable.setDefaultRenderer(Object.class, new WikiNamespaceTableCellRenderer(model));
+
+		WikiNamespaceTablePaginationProvider dataProvider = new WikiNamespaceTablePaginationProvider(model);
+		PaginatedTableDecorator<WikiNamespaceData> tableDecorator = PaginatedTableDecorator.decorate(wikiTable,
+				dataProvider, null, 100);
+		ui.setColumnPreferredWidths(wikiTable, 40, 200, 90, 120);
+		ui.setColumnMinWidths(wikiTable, 40, 200, 120, 120);
+		ui.setColumnMaxWidths(wikiTable, 40, 200, 120, 120);
+
+		JScrollPane wikiScroll = new JScrollPane(wikiTable);
+		wikiScroll.setBorder(ui.createTitleBorder("Données du Wiki"));
+
+		return wikiScroll;
+	}
+
+	private JComponent buildProgressionPane() {
 
 		progressLogs = new JTextPane();
 		progressLogs.setContentType("text/html"); // let the text pane know this is what you want
@@ -236,72 +277,26 @@ public class AppView extends JFrame implements IModelListener {
 
 		progressScroll = new JScrollPane(progressLogs);
 		progressScroll.setBorder(ui.createTitleBorder("Progression"));
-		progressScroll.setPreferredSize(new Dimension(600, 500));
-		GridBagConstraints cst = new GridBagConstraints();
-		cst.gridx = 1;
-		cst.gridy = 2;
-		cst.gridwidth = 1;
-		cst.gridheight = 1;
-		cst.insets = new Insets(0, 0, 10, 5);
-		cst.weightx = 0;
-		cst.weighty = 1;
-		cst.fill = GridBagConstraints.BOTH;
-		cst.anchor = GridBagConstraints.NORTHWEST;
-		parent.add(progressScroll, cst);
+		progressScroll.setPreferredSize(new Dimension(500, 300));
+
+		return progressScroll;
+	}
+
+	private JComponent buildLogsPane() {
+		logsUI = new JTextArea(15, 10);
+		logsUI.setEditable(false);
+
+		JScrollPane component = new JScrollPane(logsUI);
+		component.setBorder(ui.createTitleBorder("Logs"));
+
+		return component;
 	}
 
 	private void addActionBar(JPanel parent) {
-		JPanel component = new JPanel(new GridLayout());
+		JPanel component = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		TitledBorder titleBorder = ui.createTitleBorder("Actions");
 		component.setBorder(titleBorder);
-		component.setPreferredSize(new Dimension(500, 70));
-
-		JPanel container = new JPanel();
-		container.setLayout(new GridLayout(1, 3));
-		container.setBorder(new EmptyBorder(2, 5, 5, 5));
-		component.add(container);
-
-		actionBtnGetPageNames = ui.createButton(
-				"<html><div style=\"white-space: nowrap;\">&nbsp;Récupérer les noms de pages <span style=\"color: fuchsia;\">*</span></div></html>");
-		actionBtnGetPageNames.addActionListener((ActionEvent e) -> {
-			AppView.this.performAction(ActionKey.GET_PAGE_NAMES);
-		});
-		actionBtnGetPageNames.setIcon(ui.launchIcon);
-		container.add(actionBtnGetPageNames);
-
-		statusProcessNamesState = new JLabel(" ");
-		JPanel namesStatusPane = new JPanel();
-		namesStatusPane.setBorder(new EmptyBorder(0, 10, 0, 0));
-		namesStatusPane.setLayout(new GridLayout(1, 2));
-		namesStatusPane.add(statusProcessNamesState);
-		namesStatusPane.add(new JLabel(ui.nextArrowIcon));
-		container.add(namesStatusPane);
-
-		actionBtnExport = ui.createButton(
-				"<html><div style=\"white-space: nowrap;\">&nbsp;<b>2 -</b> Exporter les pages</div></html>");
-		actionBtnExport.setEnabled(false);
-		actionBtnExport.addActionListener((ActionEvent e) -> {
-			AppView.this.performAction(ActionKey.EXPORT_PAGES);
-		});
-		container.add(actionBtnExport);
-
-		statusProcessExportState = new JLabel(" ");
-		JPanel exportStatus = new JPanel();
-		exportStatus.setBorder(new EmptyBorder(0, 10, 0, 0));
-		exportStatus.setLayout(new GridLayout(1, 2));
-		exportStatus.add(statusProcessExportState);
-		exportStatus.add(new JLabel(ui.nextArrowIcon));
-		container.add(exportStatus);
-
-		actionBtnSaveXML = ui.createButton(
-				"<html><div style=\"white-space: nowrap;\">&nbsp;<b>3 -</b> Sauvegarder les fichiers...</div></html>");
-		actionBtnSaveXML.setEnabled(false);
-		actionBtnSaveXML.addActionListener((ActionEvent e) -> {
-			AppView.this.performAction(ActionKey.SAVE_XML_FILES);
-		});
-		actionBtnSaveXML.setVerticalAlignment(SwingConstants.CENTER);
-		container.add(actionBtnSaveXML);
-
+		component.setPreferredSize(new Dimension(-1, 70));
 		GridBagConstraints cst = new GridBagConstraints();
 		cst.gridx = 0;
 		cst.gridy = 1;
@@ -309,10 +304,110 @@ public class AppView extends JFrame implements IModelListener {
 		cst.gridheight = 1;
 		cst.insets = new Insets(5, 5, 5, 5);
 		cst.weightx = 0;
-		cst.weighty = 1;
-		cst.fill = GridBagConstraints.BOTH;
+		cst.weighty = 0;
+		cst.fill = GridBagConstraints.HORIZONTAL;
 		cst.anchor = GridBagConstraints.NORTHWEST;
 		parent.add(component, cst);
+
+		JPanel container = new JPanel();
+		container.setLayout(new GridBagLayout());
+		container.setBorder(new EmptyBorder(2, 5, 5, 5));
+		component.setPreferredSize(new Dimension(-1, 70));
+		component.add(container);
+
+		// Button about : retrieve wiki page names
+		actionBtnGetPageNames = ui.createButton(
+				"<html><div style=\"white-space: nowrap;\">&nbsp;Récupérer les noms de pages <span style=\"color: fuchsia;\">*</span></div></html>");
+		actionBtnGetPageNames.addActionListener((ActionEvent e) -> {
+			AppView.this.performAction(ActionKey.GET_PAGE_NAMES);
+		});
+		actionBtnGetPageNames.setIcon(ui.launchIcon);
+		cst = new GridBagConstraints();
+		cst.weightx = 0;
+		cst.weighty = 1;
+		cst.fill = GridBagConstraints.BOTH;
+		container.add(actionBtnGetPageNames, cst);
+
+		// Infos label about : retrieve wiki page names
+		JPanel namesProcessPane = new JPanel();
+		namesProcessPane.setBorder(new EmptyBorder(0, 10, 0, 0));
+		namesProcessPane.setLayout(new GridLayout(1, 2));
+		cst = new GridBagConstraints();
+		cst.weightx = 2;
+		cst.weighty = 1;
+		cst.gridwidth = 2;
+//		cst.fill = GridBagConstraints.BOTH;
+		container.add(namesProcessPane, cst);
+
+		JPanel namesStatusPane = new JPanel(new FlowLayout());
+		namesProcessPane.add(namesStatusPane);
+
+		statusProcessNamesState = new JLabel(" ");
+		namesStatusPane.add(statusProcessNamesState);
+
+		// Action button : wiki page names
+		saveNamesBtn = ui.createButton(ui.downloadIcon);
+		saveNamesBtn.setBackground(null);
+		saveNamesBtn.setVisible(false);
+		saveNamesBtn.addActionListener((ActionEvent e) -> {
+			AppView.this.performAction(ActionKey.SAVE_NAMES_FILES);
+		});
+		namesStatusPane.add(saveNamesBtn);
+
+		// next arrow
+		cst = new GridBagConstraints();
+		cst.weighty = 1;
+		cst.fill = GridBagConstraints.VERTICAL;
+		JLabel next = new JLabel(ui.nextArrowIcon);
+		next.setPreferredSize(new Dimension(100, -1));
+		next.setMinimumSize(new Dimension(100, -1));
+		container.add(next, cst);
+
+		// Button about : export process
+		actionBtnExport = ui
+				.createButton("<html><div style=\"white-space: nowrap;\">&nbsp;Exporter les pages</div></html>");
+		actionBtnExport.setEnabled(false);
+		actionBtnExport.addActionListener((ActionEvent e) -> {
+			AppView.this.performAction(ActionKey.EXPORT_PAGES);
+		});
+		cst = new GridBagConstraints();
+		cst.weighty = 1;
+		cst.fill = GridBagConstraints.BOTH;
+		container.add(actionBtnExport, cst);
+
+		// Infos label about : export process
+		statusProcessExportState = new JLabel(" ");
+		JPanel exportStatus = new JPanel();
+		exportStatus.setBorder(new EmptyBorder(0, 10, 0, 0));
+		exportStatus.setLayout(new GridLayout(1, 2));
+		exportStatus.add(statusProcessExportState);
+		cst = new GridBagConstraints();
+		cst.weightx = 2;
+		cst.weighty = 1;
+		cst.gridwidth = 2;
+		container.add(exportStatus, cst);
+
+		// next arrow
+		cst = new GridBagConstraints();
+		cst.weighty = 1;
+		cst.fill = GridBagConstraints.VERTICAL;
+		next = new JLabel(ui.nextArrowIcon);
+		next.setPreferredSize(new Dimension(100, -1));
+		next.setMinimumSize(new Dimension(100, -1));
+		container.add(next, cst);
+
+		// Button : save exports ZIP file
+		actionBtnSaveXML = ui
+				.createButton("<html><div style=\"white-space: nowrap;\">&nbsp;Enregistrer...</div></html>");
+		actionBtnSaveXML.setEnabled(false);
+		actionBtnSaveXML.addActionListener((ActionEvent e) -> {
+			AppView.this.performAction(ActionKey.SAVE_XML_FILES);
+		});
+
+		cst = new GridBagConstraints();
+		cst.weighty = 1;
+		cst.fill = GridBagConstraints.BOTH;
+		container.add(actionBtnSaveXML, cst);
 	}
 
 	private void addFooter(JPanel parent) {
@@ -350,6 +445,7 @@ public class AppView extends JFrame implements IModelListener {
 		progressBarContainer.add(progressBar);
 
 		JPanel cancelButtonContainer = new JPanel(new GridLayout());
+		cancelButtonContainer.setVisible(false);
 		cst = new GridBagConstraints();
 		cst.gridx = 1;
 		cst.gridy = 0;
@@ -360,7 +456,6 @@ public class AppView extends JFrame implements IModelListener {
 		component.add(cancelButtonContainer, cst);
 
 		cancelButton = ui.createButton("Interrompre", ui.cancelIcon);
-		cancelButton.setVisible(false);
 		cancelButton.addActionListener((ActionEvent e) -> {
 			cancelButton.setEnabled(false);
 			AppView.this.performAction(ActionKey.STOP_CURRENT_PROCESS);
@@ -415,15 +510,8 @@ public class AppView extends JFrame implements IModelListener {
 	}
 
 	private synchronized void performAction(ActionKey key) {
-		System.out.println("Action performed : " + key.name());
-
 		switch (key) {
-		case OPEN_CONFIG_WINDOWS:
-
-			break;
 		case GET_PAGE_NAMES:
-			cleanLog();
-			cleanProgress();
 			new Thread(() -> {
 				for (IActionListener listener : this.listeners) {
 					listener.performGetPageNames();
@@ -431,8 +519,6 @@ public class AppView extends JFrame implements IModelListener {
 			}).start();
 			break;
 		case EXPORT_PAGES:
-			cleanLog();
-			cleanProgress();
 			new Thread(() -> {
 				for (IActionListener listener : this.listeners) {
 					listener.performExportPages();
@@ -440,8 +526,6 @@ public class AppView extends JFrame implements IModelListener {
 			}).start();
 			break;
 		case SAVE_XML_FILES:
-			cleanLog();
-			cleanProgress();
 			new Thread(() -> {
 				for (IActionListener listener : this.listeners) {
 					listener.performSaveXMLFiles();
@@ -449,9 +533,18 @@ public class AppView extends JFrame implements IModelListener {
 			}).start();
 			break;
 		case STOP_CURRENT_PROCESS:
+			progressBar.setString("En cours d'interruption ...");
+			progressBar.setIndeterminate(true);
 			new Thread(() -> {
 				for (IActionListener listener : this.listeners) {
 					listener.stopCurrentProcess();
+				}
+			}).start();
+			break;
+		case SAVE_NAMES_FILES:
+			new Thread(() -> {
+				for (IActionListener listener : this.listeners) {
+					listener.performSaveNamesOnlyFiles();
 				}
 			}).start();
 			break;
@@ -462,30 +555,57 @@ public class AppView extends JFrame implements IModelListener {
 
 	@Override
 	public void onApplicationStateChange(AppState state) {
-		System.out.println("Application state : " + state.name());
 		SwingUtilities.invokeLater(() -> {
 			updateCursor(state);
 			switch (state) {
 			case GET_NAMES_PROCESSING:
+				// logs
+				cleanLog();
+				cleanProgress();
+
+				// disable UI action buttons
 				disable(this.actionBtnGetPageNames);
 				disable(this.actionBtnExport);
 				disable(this.actionBtnSaveXML);
-				statusProcessNamesState.setText(" En cours");
-				statusProcessNamesState.setIcon(ui.loadingIcon);
-				statusProcessNamesState.setForeground(Color.ORANGE);
+				saveNamesBtn.setEnabled(false);
+				saveNamesBtn.setVisible(false);
+
+				// Progress bar update
 				cleanProgress();
-				cleanLog();
 				progressBar.setString("Récupération des noms de pages ...");
 				progressBar.setIndeterminate(true);
 				progressBar.setVisible(true);
-				cancelButton.setVisible(true);
+
+				// cancel process button
+				cancelButton.getParent().setVisible(true);
 				cancelButton.setEnabled(true);
 				cancelButton.requestFocusInWindow();
+
+				// process indicator
+				statusProcessNamesState.setText(" En cours");
+				statusProcessNamesState.setIcon(ui.loadingIcon);
+				statusProcessNamesState.setForeground(Color.ORANGE);
 				break;
 			case GET_NAMES_DONE:
+
+				// UI action buttons
 				enable(this.actionBtnGetPageNames);
 				enable(this.actionBtnExport);
 				this.actionBtnExport.requestFocusInWindow();
+				saveNamesBtn.setVisible(true);
+				saveNamesBtn.setEnabled(true);
+
+				// process cancel button
+				cancelButton.setEnabled(false);
+
+				// Progress bar update
+				progressBar.setValue(0);
+				progressBar.setIndeterminate(false);
+				progressBar.setString("Noms de pages récupérés : " + model.countNames());
+				progressBar.getModel().setMinimum(0);
+				progressBar.getModel().setMaximum(model.countNames());
+
+				// process indicator
 				statusProcessNamesState.setText(model.countNames() + " noms");
 				if (model.getCurrenProcessState() == TaskStatus.DONE_FAILED) {
 					statusProcessNamesState.setIcon(ui.failIcon);
@@ -496,35 +616,53 @@ public class AppView extends JFrame implements IModelListener {
 					statusProcessNamesState.setForeground(Color.GREEN);
 					statusProcessNamesState.setText(model.countNames() + " noms");
 				}
-				progressBar.setValue(0);
-				progressBar.setIndeterminate(false);
-				progressBar.setString("Noms de pages récupérés : " + model.countNames());
-				progressBar.getModel().setMinimum(0);
-				progressBar.getModel().setMaximum(model.countNames());
-				cancelButton.setEnabled(false);
+				wikiTable.repaint();
 				break;
 			case EXPORT_PAGES_PROCESSING:
+				// logs
+				cleanLog();
+				cleanProgress();
+
+				// disable UI action buttons
 				disable(this.actionBtnGetPageNames);
 				disable(this.actionBtnExport);
-				statusProcessExportState.setText(" En cours");
-				statusProcessExportState.setIcon(ui.loadingIcon);
-				statusProcessExportState.setForeground(Color.ORANGE);
+				disable(this.actionBtnSaveXML);
+				saveNamesBtn.setEnabled(false);
+
+				// process cancel button
+				cancelButton.getParent().setVisible(true);
+				cancelButton.setEnabled(true);
+				cancelButton.requestFocusInWindow();
+
+				// Progress bar update
 				cleanProgress();
-				cleanLog();
 				progressBar.setValue(0);
 				progressBar.setIndeterminate(false);
 				progressBar.setVisible(true);
 				progressBar.setString("Export des pages wiki ...");
-				cancelButton.setVisible(true);
-				cancelButton.setEnabled(true);
-				cancelButton.requestFocusInWindow();
+
+				// process indicator
+				statusProcessExportState.setText(" En cours");
+				statusProcessExportState.setIcon(ui.loadingIcon);
+				statusProcessExportState.setForeground(Color.ORANGE);
 				break;
 			case EXPORT_PAGES_DONE:
+				// UI action buttons
 				enable(this.actionBtnGetPageNames);
 				enable(this.actionBtnExport);
 				this.actionBtnSaveXML.setEnabled(true);
 				this.actionBtnSaveXML.setIcon(ui.downloadIcon);
 				this.actionBtnSaveXML.requestFocusInWindow();
+				saveNamesBtn.setEnabled(true);
+
+				// process cancel button
+				cancelButton.setEnabled(false);
+
+				// Progress bar update
+				progressBar.setIndeterminate(false);
+				progressBar.setString("Page exportées : " + model.countExportSuccess());
+
+				// process indicator
 				if (model.getCurrenProcessState() == TaskStatus.DONE_FAILED) {
 					statusProcessExportState.setIcon(ui.failIcon);
 					statusProcessExportState.setText("Erreur(s)");
@@ -534,31 +672,53 @@ public class AppView extends JFrame implements IModelListener {
 					statusProcessExportState.setText("OK");
 					statusProcessExportState.setForeground(Color.GREEN);
 				}
-				progressBar.setString("Page exportées : " + model.countExportSuccess());
-				cancelButton.setEnabled(false);
+				wikiTable.repaint();
 				break;
 			case SAVE_XML_FILES_PROCESSING:
-				this.cleanProgress();
+			case SAVE_NAMES_FILES_PROCESSING:
+				// logs
+				cleanLog();
+				cleanProgress();
+
+				// disable UI action buttons
 				disable(this.actionBtnGetPageNames);
 				disable(this.actionBtnExport);
 				disable(this.actionBtnSaveXML);
+				saveNamesBtn.setEnabled(false);
+
+				// process cancel button
+				cancelButton.getParent().setVisible(false);
+				cancelButton.setEnabled(false);
+
+				// Progress bar update
+				this.cleanProgress();
 				progressBar.setString("Création de l'archive ZIP");
 				progressBar.setIndeterminate(true);
-				cancelButton.setVisible(false);
-				cancelButton.setEnabled(false);
 				break;
 			case SAVE_XML_FILES_DONE:
+			case SAVE_NAMES_FILES_DONE:
+				// logs
 				File exportsDataFile = model.getExportsDataFile();
 				if (exportsDataFile != null) {
 					this.appendProgress("<br>Données d'export enregistré dans l'archive :<br><br><b>"
 							+ exportsDataFile.getAbsolutePath() + "</b>");
 				}
+
+				// update action buttons
 				enable(this.actionBtnGetPageNames);
 				enable(this.actionBtnExport);
-				this.actionBtnSaveXML.setEnabled(true);
-				this.actionBtnSaveXML.setIcon(ui.downloadIcon);
-				this.actionBtnSaveXML.requestFocusInWindow();
+				saveNamesBtn.setVisible(true);
+				saveNamesBtn.setEnabled(true);
+				if (isExportXMLAvailable()) {
+					this.actionBtnSaveXML.setEnabled(true);
+					this.actionBtnSaveXML.setIcon(ui.downloadIcon);
+					this.actionBtnSaveXML.requestFocusInWindow();
+				}
+
+				// process cancel button
 				cancelButton.setEnabled(false);
+
+				// progress bar
 				progressBar.setValue(0);
 				progressBar.setIndeterminate(false);
 				progressBar.setVisible(false);
@@ -569,6 +729,15 @@ public class AppView extends JFrame implements IModelListener {
 		});
 	}
 
+	private boolean isExportXMLAvailable() {
+		for (ExportData data : model.getExportDataList()) {
+			if (data.getExportXML() != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public void onExportDone(ExportData data) {
 		if (data.getStatus() == TaskStatus.DONE_SUCCESS) {
@@ -576,6 +745,14 @@ public class AppView extends JFrame implements IModelListener {
 				this.progressBar.setValue(this.progressBar.getValue() + data.getPageNames().size());
 			});
 		}
+	}
+
+	@Override
+	public void onNamespaceDataUpdate(WikiNamespaceData wikiData, TaskStatus oldStatus, TaskStatus newStatus) {
+	}
+
+	@Override
+	public void onExportInitDone(ExportData data) {
 	}
 
 	private void disable(JButton btn) {
@@ -597,11 +774,13 @@ public class AppView extends JFrame implements IModelListener {
 		case GET_NAMES_DONE:
 		case EXPORT_PAGES_DONE:
 		case SAVE_XML_FILES_DONE:
+		case SAVE_NAMES_FILES_DONE:
 			AppView.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			break;
 		case GET_NAMES_PROCESSING:
 		case EXPORT_PAGES_PROCESSING:
 		case SAVE_XML_FILES_PROCESSING:
+		case SAVE_NAMES_FILES_PROCESSING:
 			AppView.this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			break;
 		default:

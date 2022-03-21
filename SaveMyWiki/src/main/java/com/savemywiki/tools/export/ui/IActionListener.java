@@ -7,6 +7,8 @@ public interface IActionListener {
 	void performExportPages();
 
 	void performSaveXMLFiles();
+
+	void performSaveNamesOnlyFiles();
 	
 	void stopCurrentProcess();
 
