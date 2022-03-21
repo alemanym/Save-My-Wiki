@@ -1,7 +1,6 @@
 package com.savemywiki.mediawiki.client;
 
 import java.io.IOException;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.http.ParseException;
@@ -25,10 +24,14 @@ public class HTTPWikiResponse {
 		System.out.println(body);
 		System.out.println("=============================");
 	}
-	
-	public HTTPWikiResponse(HttpResponse<String> response) {
-		this.statusCode = response.statusCode();
-		this.body = response.body();
+
+	public HTTPWikiResponse(int status, String body) {
+
+		this.statusCode = status;
+		this.body = body;
+		System.out.println("=============================");
+		System.out.println(body);
+		System.out.println("=============================");
 	}
 
 	public int statusCode() {

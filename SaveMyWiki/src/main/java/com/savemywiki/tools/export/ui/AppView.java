@@ -255,7 +255,7 @@ public class AppView extends JFrame implements IModelListener {
 		wikiTable.setDefaultRenderer(Object.class, new WikiNamespaceTableCellRenderer(model));
 
 		WikiNamespaceTablePaginationProvider dataProvider = new WikiNamespaceTablePaginationProvider(model);
-		PaginatedTableDecorator<WikiNamespaceData> tableDecorator = PaginatedTableDecorator.decorate(wikiTable,
+		PaginatedTableDecorator.decorate(wikiTable,
 				dataProvider, null, 100);
 		ui.setColumnPreferredWidths(wikiTable, 40, 200, 90, 120);
 		ui.setColumnMinWidths(wikiTable, 40, 200, 120, 120);

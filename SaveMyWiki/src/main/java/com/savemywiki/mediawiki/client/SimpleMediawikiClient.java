@@ -1,18 +1,13 @@
 package com.savemywiki.mediawiki.client;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-import java.time.Duration;
-
-import org.apache.http.client.utils.URIBuilder;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.savemywiki.tools.export.model.AppModel;
 import com.savemywiki.tools.export.model.ExportData;
@@ -24,18 +19,16 @@ import com.savemywiki.utils.Logger;
  */
 public class SimpleMediawikiClient implements IMediawikiClient {
 
-	private static final String RELATIVE_URL_EXPORT = "/index.php/Sp%C3%A9cial:Exporter";
 	private static final String RELATIVE_URL_API = "/api.php";
 	private static final String PAGE_SEPARATOR = "|";
+	private static final int TIMEOUT_MILLISEC = 30000;
 
-	private HttpClient httpClient;
 	private AppModel model;
 	private Logger logger;
 
 	public SimpleMediawikiClient(AppModel model, Logger logger) {
 		this.model = model;
 		this.logger = logger;
-		this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofMinutes(1)).build();
 	}
 
 	/**
@@ -45,79 +38,122 @@ public class SimpleMediawikiClient implements IMediawikiClient {
 	@Override
 	public HTTPWikiResponse listPageNamesRequest(WikiNamespace namespace, String fromPageName)
 			throws URISyntaxException, IOException, InterruptedException {
+		
+		// init
+		HttpURLConnection con = initListePagesRequest(model, namespace, fromPageName);
 
-		URI uri = buildListPageURI(model, namespace, fromPageName);
-		logger.appendLog(uri.toString());
-
-		HttpRequest request = HttpRequest.newBuilder().uri(uri).headers("Content-Type", "text/plain;charset=UTF-8")
-				.POST(HttpRequest.BodyPublishers.noBody()).build();
-
-		HttpResponse<String> response = httpClient.send(request, BodyHandlers.ofString());
-
-		return new HTTPWikiResponse(response);
+		// send
+		int status = con.getResponseCode();
+		
+		// response
+		return readResponse(con, status);
 	}
 
-	/**
-	 * Build URI of the retrieve page names request.
-	 */
-	private URI buildListPageURI(AppModel model, WikiNamespace namespace, String fromPageName)
-			throws URISyntaxException {
-		URIBuilder b = new URIBuilder(model.getWebsiteURL() + RELATIVE_URL_API);
-		b.addParameter("action", "query");
-		b.addParameter("list", "allpages");
-		b.addParameter("format", "json");
-		b.addParameter("aplimit", "" + model.getNamesQueryLimit());
-		b.addParameter("apfrom", fromPageName);
-		b.addParameter("exportnowrap", "1");
-		b.addParameter("apnamespace", namespace.getId());
-		URI uri = b.build();
-		return uri;
+	private HttpURLConnection initListePagesRequest(AppModel model, WikiNamespace namespace, String fromPageName) throws IOException {
+		
+		// query parameters
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("param1", "val");
+		parameters.put("action", "query");
+		parameters.put("list", "allpages");
+		parameters.put("format", "json");
+		parameters.put("aplimit", "" + model.getNamesQueryLimit());
+		parameters.put("apfrom", fromPageName);
+		parameters.put("exportnowrap", "1");
+		parameters.put("apnamespace", namespace.getId());
+
+		// connection init
+		String method = "POST";
+		String uri = model.getWebsiteURL() + RELATIVE_URL_API + "?" + ParameterStringBuilder.getParamsString(parameters);
+		URL url = new URL(uri);
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod(method);
+		logger.appendLog("Request : " + method + " " + uri);
+		
+		// header
+		con.setRequestProperty("Content-Type", "text/plain;charset=UTF-8");
+		con.setRequestProperty("Accept", "application/json");
+		
+		// timeouts
+		con.setConnectTimeout(TIMEOUT_MILLISEC);
+		con.setReadTimeout(TIMEOUT_MILLISEC);
+
+		con.setDoOutput(true);
+		
+		return con;
 	}
 
 	/**
 	 * Send a HTTP Request to export page data from a web site using Mediawiki
 	 * framework.
+	 * @throws IOException 
 	 */
 	@Override
-	public HTTPWikiResponse exportRequest(ExportData exportData)
-			throws URISyntaxException, IOException, InterruptedException {
-		URI uri = buildExportURI(model, exportData);
-		logger.appendLog(uri.toString());
+	public HTTPWikiResponse exportRequest(ExportData exportData) throws IOException {
 
-		HttpRequest request = HttpRequest.newBuilder().uri(uri)
-				.headers("Content-Type", "application/x-www-form-urlencoded").POST(HttpRequest.BodyPublishers.noBody())
-				.build();
+		// init
+		HttpURLConnection con = initExportRequest(model, exportData);
 
-		HttpResponse<String> response = httpClient.send(request, BodyHandlers.ofString());
-
-		return new HTTPWikiResponse(response);
+		// send
+		int status = con.getResponseCode();
+		
+		// response
+		return readResponse(con, status);
 	}
 
-	/**
-	 * Build URI of the export pages request.
-	 */
-	private URI buildExportURI(AppModel model, ExportData exportData) throws URISyntaxException {
-
-		// build query parameter
+	private HttpURLConnection initExportRequest(AppModel model, ExportData exportData) throws IOException {
+		// query parameters
 		StringBuffer pagesParam = new StringBuffer();
-
 		for (String pageName : exportData.getPageNames()) {
 			pagesParam.append(pageName);
 			pagesParam.append(PAGE_SEPARATOR);
 		}
+		Map<String, String> parameters = new HashMap<>();
+		parameters.put("action", "query");
+		parameters.put("format", "json");
+		parameters.put("prop", "revisions");
+		parameters.put("export", "1");
+		parameters.put("exportnowrap", "1");
+		parameters.put("titles", pagesParam.toString()); // liste des noms de pages
 
-		URIBuilder b = new URIBuilder(model.getWebsiteURL() + RELATIVE_URL_API);
-		b.addParameter("action", "query");
-		b.addParameter("format", "json");
-		b.addParameter("prop", "revisions");
-		b.addParameter("export", "1");
-		b.addParameter("exportnowrap", "1");
-		b.addParameter("titles", pagesParam.toString()); // liste des noms de pages
+		// connection init
+		String method = "POST";
+		String uri = model.getWebsiteURL() + RELATIVE_URL_API + "?" + ParameterStringBuilder.getParamsString(parameters);
+		URL url = new URL(uri);
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod(method);
+		logger.appendLog("Request : " + method + " " + uri);
+		
+		// method
+		con.setRequestMethod("GET");
+		
+		// header
+		con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		
+		// timeouts
+		con.setConnectTimeout(TIMEOUT_MILLISEC);
+		con.setReadTimeout(TIMEOUT_MILLISEC);
 
-		URI uri = b.build();
-		return uri;
+		con.setDoOutput(true);
+		
+		return con;
 	}
 
+	private HTTPWikiResponse readResponse(HttpURLConnection con, int status) throws IOException {
+		try(BufferedReader in = new BufferedReader(
+				  new InputStreamReader(con.getInputStream()))) {
+			String inputLine;
+			StringBuffer content = new StringBuffer();
+			while ((inputLine = in.readLine()) != null) {
+			    content.append(inputLine);
+			}
+			return new HTTPWikiResponse(status, content.toString());
+		} finally {
+			con.disconnect();
+		}
+	}
+
+	/*
 	private String authToken;
 	private void authenticate() throws IOException, InterruptedException, URISyntaxException {
 
@@ -145,4 +181,5 @@ public class SimpleMediawikiClient implements IMediawikiClient {
 			throw e;
 		}
 	}
+	*/
 }

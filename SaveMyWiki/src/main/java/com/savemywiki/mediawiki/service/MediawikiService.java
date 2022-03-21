@@ -171,7 +171,7 @@ public class MediawikiService {
 				model.setExportStatus(exportData, TaskStatus.DONE_SUCCESS);
 				exportData.setExportXML(response.body());
 			}
-		} catch (IOException | URISyntaxException e) {
+		} catch (IOException e) {
 			// fatal error
 			model.setExportStatus(exportData, TaskStatus.DONE_FAILED);
 			e.printStackTrace();
