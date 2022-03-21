@@ -1,9 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>mediawiki.tools</groupId>
-	<artifactId>mediawiki.tools.export</artifactId>
+	<groupId>com.savemywiki</groupId>
+	<artifactId>savemywiki-export</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>mediawiki.tools.export</name>
+	<name>save-my-wiki-export</name>
+	<packaging>jar</packaging>
 
 	<dependencies>
 	
@@ -70,10 +71,28 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.mediawiki.tools.export.app.ApplicationLauncher</mainClass>
+							<mainClass>com.savemywiki.app.SaveMyWikiApp</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
+			</plugin>
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-dependency-plugin</artifactId>
+			    <executions>
+			        <execution>
+			            <id>copy-dependencies</id>
+			            <phase>prepare-package</phase>
+			            <goals>
+			                <goal>copy-dependencies</goal>
+			            </goals>
+			            <configuration>
+			                <outputDirectory>
+			                    ${project.build.directory}/libs
+			                </outputDirectory>
+			            </configuration>
+			        </execution>
+			    </executions>
 			</plugin>
 		</plugins>
 	</build>
