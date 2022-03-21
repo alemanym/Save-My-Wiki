@@ -98,10 +98,7 @@ public class FileHelper {
 
 			// Create data files
 			for (ExportData data : dataList) {
-				System.out.print("\r\n"+ (data.getRetrySource() != null ? data.getRetrySource().getId() + ":" : "") + data.getId());
-
 				if (data.getStatus() == TaskStatus.DONE_SUCCESS) {
-					System.out.print(" > case SUCCESS");
 					// case : export success
 
 					// - XML data
@@ -110,10 +107,8 @@ public class FileHelper {
 					successFiles.add(writeWellExportedPageNamesFile(data));
 
 				} else if (data.getStatus() == TaskStatus.DONE_FAILED) {
-					System.out.print(" > case FAILED");
 					// case : export failed
 					if (data.getRetrySource() == null) {
-						System.out.print(" > case FIRST ATTEMPT");
 						// case : first attempt failed
 						if (!hasBeenRetried(data, dataList) || hasBeenRetriedAllFailed(data, dataList)) {
 							// case : failed without retry launched or all retry failed
@@ -122,20 +117,16 @@ public class FileHelper {
 							// case : retry success or partial => no first attempt result storage
 						}
 					} else {
-						System.out.print(" > case RETRY");
 						// case : failed retry
 						if (!hasBeenRetriedAllFailed(data.getRetrySource(), dataList)) {
 							errorFiles.add(writeWrongExportedPageNamesFile(data));
 						}
 					}
 				} else {
-					System.out.print(" > case OTHER");
 					if (data.getRetrySource() == null) {
-						System.out.print(" > case FIRST ATTEMPT");
 						// data without export attempt
 						undefinedFiles.add(writeNotExportedPageNamesFile(data));
 					} else {
-						System.out.print(" > case RETRY");
 						// retry not launched
 						if (hasBeenRetried(data.getRetrySource(), dataList)) {
 							// retry not initiated => No store data

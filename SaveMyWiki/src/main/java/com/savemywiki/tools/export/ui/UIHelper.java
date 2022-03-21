@@ -15,7 +15,6 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -25,6 +24,11 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMoonlightContr
 import com.formdev.flatlaf.ui.FlatButtonBorder;
 import com.formdev.flatlaf.ui.FlatDropShadowBorder;
 
+/**
+ * Swing Look&feel helper and UI Component builder.
+ * 
+ * @author Marc Alemany
+ */
 public class UIHelper {
 
 	public ImageIcon loadingIcon;

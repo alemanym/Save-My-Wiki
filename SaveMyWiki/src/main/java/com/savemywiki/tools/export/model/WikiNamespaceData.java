@@ -3,6 +3,11 @@ package com.savemywiki.tools.export.model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Data about wiki by namespace.
+ * 
+ * @author Marc Alemany
+ */
 public class WikiNamespaceData {
 
 	private WikiNamespace namespace;

@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Application Model
+ * 
+ * @author Marc Alemany
+ */
 public class AppModel {
 
 	// Config

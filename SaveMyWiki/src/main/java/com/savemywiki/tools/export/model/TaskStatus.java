@@ -1,5 +1,10 @@
 package com.savemywiki.tools.export.model;
 
+/**
+ * Task status (for Read wiki data or export).
+ * 
+ * @author Marc Alemany
+ */
 public enum TaskStatus {
 
 	UNDEFINED,

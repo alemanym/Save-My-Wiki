@@ -1,5 +1,10 @@
 package com.savemywiki.tools.export.ui;
 
+/**
+ * Application GUI Actions listener.
+ * 
+ * @author Marc Alemany
+ */
 public interface IActionListener {
 	
 	void performGetPageNames();

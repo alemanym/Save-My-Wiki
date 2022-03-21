@@ -1,5 +1,10 @@
 package com.savemywiki.tools.export.model;
 
+/**
+ * Application state.
+ * 
+ * @author Marc Alemany
+ */
 public enum AppState {
 
 	INIT,

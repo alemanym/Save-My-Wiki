@@ -1,5 +1,10 @@
 package com.savemywiki.tools.export.model;
 
+/**
+ * Application Model adapter.
+ * 
+ * @author Marc Alemany
+ */
 public class ModelAdapter implements IModelListener {
 
 	@Override

@@ -31,14 +31,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
-import javax.swing.table.TableColumn;
 
 import com.savemywiki.tools.export.model.AppModel;
 import com.savemywiki.tools.export.model.AppState;
@@ -54,6 +52,11 @@ import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTableHead
 import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTableModel;
 import com.savemywiki.tools.export.ui.table.wikinamespace.WikiNamespaceTablePaginationProvider;
 
+/**
+ * Application GUI.
+ * 
+ * @author Marc Alemany
+ */
 public class AppView extends JFrame implements IModelListener {
 
 	private static final long serialVersionUID = 2041262664326157307L;
@@ -63,6 +66,8 @@ public class AppView extends JFrame implements IModelListener {
 
 	// inner UI components
 	private UIHelper ui;
+	
+	private PlaceholderTextField urlInput;
 
 	private JTextArea logsUI;
 
@@ -83,6 +88,8 @@ public class AppView extends JFrame implements IModelListener {
 	private JButton saveNamesBtn;
 
 	private WikiNamespaceTable wikiTable;
+
+	private JPanel actionBar;
 
 	public AppView(UIHelper uiHelper, AppModel model) {
 		super(model.getFrameTitle());
@@ -113,7 +120,7 @@ public class AppView extends JFrame implements IModelListener {
 		this.setLocationRelativeTo(null);
 		this.setVisible(true);
 
-		this.actionBtnGetPageNames.requestFocusInWindow();
+		this.urlInput.requestFocusInWindow();
 	}
 
 	private JPanel buildMainPane() {
@@ -160,28 +167,17 @@ public class AppView extends JFrame implements IModelListener {
 		// label
 		urlPane.add(new JLabel("URL du wiki : "));
 		// input
-		JTextField urlInput = new JTextField(model.getWebsiteURL());
+		urlInput = new PlaceholderTextField(model.getWebsiteURL());
+		urlInput.setPlaceholder("https://my-wiki.com");
 		urlInput.addActionListener((ActionEvent e) -> {
 			String url = urlInput.getText().trim();
-			if (url.length() > 0 && url.charAt(url.length() - 1) == '/') {
-				url = url.substring(0, url.length() - 1);
-			}
-			if (url.indexOf("/index.php") > 0) {
-				url = url.substring(0, url.indexOf("/index.php"));
-			}
-			model.setWebsiteURL(url);
+			updateWikiURL(url);
 		});
 		urlInput.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				String url = urlInput.getText().trim();
-				if (url.length() > 0 && url.charAt(url.length() - 1) == '/') {
-					url = url.substring(0, url.length() - 1);
-				}
-				if (url.indexOf("/index.php") > 0) {
-					url = url.substring(0, url.indexOf("/index.php"));
-				}
-				model.setWebsiteURL(url);
+				updateWikiURL(url);
 			}
 		});
 		urlInput.setPreferredSize(new Dimension(300, 30));
@@ -230,6 +226,18 @@ public class AppView extends JFrame implements IModelListener {
 		cst.anchor = GridBagConstraints.WEST;
 
 		parent.add(component, cst);
+	}
+
+	private void updateWikiURL(String url) {
+		actionBar.setEnabled(url.length() > 0);
+		if (url.length() > 0 && url.charAt(url.length() - 1) == '/') {
+			url = url.substring(0, url.length() - 1);
+		}
+		if (url.indexOf("/index.php") > 0) {
+			url = url.substring(0, url.indexOf("/index.php"));
+		}
+		actionBar.setVisible(url.length() > 0);
+		model.setWebsiteURL(url);
 	}
 
 	private JPanel createMiddlePane(JComponent parent) {
@@ -313,10 +321,11 @@ public class AppView extends JFrame implements IModelListener {
 	}
 
 	private void addActionBar(JPanel parent) {
-		JPanel component = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		actionBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		TitledBorder titleBorder = ui.createTitleBorder("Actions");
-		component.setBorder(titleBorder);
-		component.setPreferredSize(new Dimension(-1, 70));
+		actionBar.setBorder(titleBorder);
+		actionBar.setPreferredSize(new Dimension(-1, 70));
+		actionBar.setVisible(false);
 		GridBagConstraints cst = new GridBagConstraints();
 		cst.gridx = 0;
 		cst.gridy = 1;
@@ -327,13 +336,13 @@ public class AppView extends JFrame implements IModelListener {
 		cst.weighty = 0;
 		cst.fill = GridBagConstraints.HORIZONTAL;
 		cst.anchor = GridBagConstraints.NORTHWEST;
-		parent.add(component, cst);
+		parent.add(actionBar, cst);
 
 		JPanel container = new JPanel();
 		container.setLayout(new GridBagLayout());
 		container.setBorder(new EmptyBorder(2, 5, 5, 5));
-		component.setPreferredSize(new Dimension(-1, 70));
-		component.add(container);
+		actionBar.setPreferredSize(new Dimension(-1, 70));
+		actionBar.add(container);
 
 		// Button about : retrieve wiki page names
 		actionBtnGetPageNames = ui.createButton(

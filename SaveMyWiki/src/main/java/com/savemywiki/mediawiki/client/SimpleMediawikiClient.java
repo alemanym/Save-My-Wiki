@@ -15,7 +15,9 @@ import com.savemywiki.tools.export.model.WikiNamespace;
 import com.savemywiki.utils.Logger;
 
 /**
- * Client to call Mediawiki web service.
+ * Client to call Mediawiki web service API.
+ * 
+ * @author Marc Alemany
  */
 public class SimpleMediawikiClient implements IMediawikiClient {
 

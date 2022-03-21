@@ -3,6 +3,11 @@ package com.savemywiki.tools.export.model;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Data about an export package.
+ * 
+ *  @author Marc Alemany
+ */
 public class ExportData {
 
 	private int id;

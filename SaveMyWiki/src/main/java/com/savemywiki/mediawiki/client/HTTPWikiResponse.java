@@ -7,6 +7,11 @@ import org.apache.http.ParseException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
 
+/**
+ * Wiki web service response.
+ * 
+ * @author Marc Alemany
+ */
 public class HTTPWikiResponse {
 
 	private int statusCode;
@@ -20,18 +25,12 @@ public class HTTPWikiResponse {
 		} catch (ParseException | IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("=============================");
-		System.out.println(body);
-		System.out.println("=============================");
 	}
 
 	public HTTPWikiResponse(int status, String body) {
 
 		this.statusCode = status;
 		this.body = body;
-		System.out.println("=============================");
-		System.out.println(body);
-		System.out.println("=============================");
 	}
 
 	public int statusCode() {

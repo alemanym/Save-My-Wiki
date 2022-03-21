@@ -19,6 +19,11 @@ import com.savemywiki.utils.FileHelper;
 import com.savemywiki.utils.FileHelper.ZipFileFilter;
 import com.savemywiki.utils.Logger;
 
+/**
+ * Application Controller.
+ * 
+ * @author Marc Alemany
+ */
 public class AppController implements IActionListener {
 
 	private static final int MAX_PAGES_BY_QUERY_LIST = 200;
@@ -37,7 +42,7 @@ public class AppController implements IActionListener {
 		model = new AppModel();
 		model.setAppIconURL("/assets/app-icon.png");
 		model.setFrameTitle("Save My Wiki");
-		model.setWebsiteURL("https://omnis-bibliotheca.com");
+		model.setWebsiteURL("");
 		model.setNamesQueryLimit(MAX_PAGES_BY_QUERY_LIST);
 
 		// create view

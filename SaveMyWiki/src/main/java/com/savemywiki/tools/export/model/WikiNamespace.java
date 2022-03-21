@@ -1,5 +1,10 @@
 package com.savemywiki.tools.export.model;
 
+/**
+ * Wiki namespace (type of wiki pages).
+ * 
+ * @author Marc Alemany
+ */
 public enum WikiNamespace {
 	
 //	MEDIA("-2"),

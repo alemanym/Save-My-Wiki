@@ -5,6 +5,11 @@ import com.savemywiki.tools.export.model.TaskStatus;
 import com.savemywiki.utils.AbortProcessException;
 import com.savemywiki.utils.Logger;
 
+/**
+ * Manager to interrupt running process.
+ * 
+ * @author Marc Alemany
+ */
 public class ProcessRunManager {
 
 	private AppModel model;

@@ -18,6 +18,11 @@ import com.savemywiki.tools.export.model.WikiNamespace;
 import com.savemywiki.utils.AbortProcessException;
 import com.savemywiki.utils.Logger;
 
+/**
+ * Service to retrieve Data using Mediawiki service services API.
+ *
+ * @author Marc Alemany
+ */
 public class MediawikiService {
 
 	private SimpleMediawikiClient wikiClient;

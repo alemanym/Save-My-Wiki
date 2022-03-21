@@ -6,6 +6,11 @@ import java.net.URISyntaxException;
 import com.savemywiki.tools.export.model.ExportData;
 import com.savemywiki.tools.export.model.WikiNamespace;
 
+/**
+ * Interface of Client to call Mediawiki web service API.
+ * 
+ * @author Marc Alemany
+ */
 public interface IMediawikiClient {
 
 	/**
