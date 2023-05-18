@@ -148,6 +148,7 @@ public class SimpleMediawikiClient implements IMediawikiClient {
 			StringBuffer content = new StringBuffer();
 			while ((inputLine = in.readLine()) != null) {
 			    content.append(inputLine);
+			    content.append("\r\n");
 			}
 			return new HTTPWikiResponse(status, content.toString());
 		} finally {
