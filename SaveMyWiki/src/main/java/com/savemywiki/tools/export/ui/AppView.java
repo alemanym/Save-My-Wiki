@@ -38,6 +38,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 
+import com.savemywiki.tools.export.ctrl.AppController;
 import com.savemywiki.tools.export.model.AppModel;
 import com.savemywiki.tools.export.model.AppState;
 import com.savemywiki.tools.export.model.ExportData;
@@ -190,7 +191,7 @@ public class AppView extends JFrame implements IModelListener {
 		namesQueryLimitPane.add(
 				new JLabel("<html>Limite de pages par requête <span style=\"color: fuchsia;\">*</span> : </html>"));
 		// input
-		SpinnerNumberModel namesLimitModel = new SpinnerNumberModel(model.getNamesQueryLimit(), 0.0, 500.0, 10.0);
+		SpinnerNumberModel namesLimitModel = new SpinnerNumberModel(model.getNamesQueryLimit(), 0.0, AppController.LIMIT_PAGES_BY_QUERY_LIST, 10.0);
 		JSpinner namesLimitInput = new JSpinner(namesLimitModel);
 		namesLimitModel.addChangeListener((ChangeEvent e) -> {
 			model.setNamesQueryLimit(namesLimitModel.getNumber().intValue());

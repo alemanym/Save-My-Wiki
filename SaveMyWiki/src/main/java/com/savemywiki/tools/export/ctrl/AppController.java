@@ -26,7 +26,8 @@ import com.savemywiki.utils.Logger;
  */
 public class AppController implements IActionListener {
 
-	private static final int MAX_PAGES_BY_QUERY_LIST = 200;
+	public static final int LIMIT_PAGES_BY_QUERY_LIST = 50;
+	private static final int MAX_PAGES_BY_QUERY_LIST = 50;
 	private static final String SKIP_LINE = "\r\n";
 
 	private AppModel model;
