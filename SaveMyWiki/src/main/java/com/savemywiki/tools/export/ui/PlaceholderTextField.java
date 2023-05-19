@@ -1,6 +1,5 @@
 package com.savemywiki.tools.export.ui;
 
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -54,7 +53,6 @@ public class PlaceholderTextField extends JTextField {
         FontRenderContext frc = new FontRenderContext(null, true, true);
 
         Rectangle2D r2D = getFont().getStringBounds(placeholder, frc);
-        int rWidth = (int) Math.round(r2D.getWidth());
         int rHeight = (int) Math.round(r2D.getHeight());
         int rY = (int) Math.round(r2D.getY());
 
